@@ -35,8 +35,8 @@ Lệnh in JSON gồm: đang ở Colab/Kaggle hay local, CUDA/VRAM, token có pre
 
 1. Mở `scripts/runtime_probe.ipynb` trong VS Code.
 2. `Select Kernel` → `Colab` → `Auto Connect` → đăng nhập Google.
-3. Chạy cell 1–2 để cài dependencies, cell 3 để clone repo (điền `REPO_URL`), cell 4 để probe GPU.
-4. Tạo Colab Secret tên `HF_TOKEN`, rồi chạy cell 5–6.
+3. Chạy cell 1–2 để cài dependencies, cell 3 để clone repo, cell 4 để probe GPU. **Vì sao clone?** Cell của kernel Colab chạy trên máy ảo của Google, không phải máy bạn; clone chỉ để copy mã nguồn vào máy ảo đó, không tạo repo mới.
+4. Tạo Colab Secret tên `HF_TOKEN`, rồi chạy cell 5–6. Kết quả nằm trong bản sao Colab → tải `results/summary/*.json` về hoặc commit/push từ Colab.
 
 ## 4. Chạy pipeline
 
