@@ -1,0 +1,39 @@
+{
+  "project": {
+    "name": "llama-code-generation",
+    "report_deadline": "2026-12-01",
+    "note": "File .yaml nhưng nội dung là JSON hợp lệ để load bằng stdlib (không bắt buộc PyYAML)."
+  },
+  "model": {
+    "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+    "revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+    "fallback_model_id": "meta-llama/Llama-3.2-3B-Instruct",
+    "backend": "auto",
+    "provider": null,
+    "dtype": "bfloat16",
+    "load_in_4bit": true
+  },
+  "decoding": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_new_tokens": 256,
+    "do_sample": false,
+    "seed": 42
+  },
+  "prompts": {
+    "A": "prompts/direct.txt",
+    "B": "prompts/structured.txt"
+  },
+  "dataset": {
+    "path": "data/tasks.jsonl",
+    "report_split": "report"
+  },
+  "sandbox": {
+    "timeout_s": 5,
+    "memory_mb": 512
+  },
+  "output": {
+    "raw": "results/raw",
+    "summary": "results/summary"
+  }
+}

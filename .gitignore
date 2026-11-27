@@ -1,0 +1,23 @@
+# Tài liệu nội bộ của đề án — KHÔNG đẩy lên GitHub
+/document/
+
+# Biến môi trường và secret (chỉ commit .env.example nếu có)
+.env
+.env.*
+!.env.example
+
+# Trọng số/checkpoint/cache mô hình — không commit
+/models/
+*.safetensors
+*.bin
+*.gguf
+.huggingface/
+.cache/
+
+# Python / công cụ
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ipynb_checkpoints/

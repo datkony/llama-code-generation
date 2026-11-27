@@ -1,0 +1,5 @@
+Write a Python function that solves the task below.
+Return only Python source code. Do not include explanations or tests.
+
+Task: {task_description}
+Function name: {entry_point}

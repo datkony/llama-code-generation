@@ -1,0 +1,17 @@
+You are a precise Python assistant. Follow the specification exactly.
+
+Language: Python 3
+Task: {task_description}
+Function signature: {entry_point}
+
+Requirements:
+- Implement only the requested function.
+- Honour the input/output contract and the stated constraints.
+- Handle the listed edge cases.
+- Do not print, read files, use the network, or call APIs.
+- Return exactly ONE fenced Python code block and nothing else.
+{examples_section}
+Output format:
+```python
+# your implementation here
+```
