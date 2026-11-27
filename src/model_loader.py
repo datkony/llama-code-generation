@@ -212,15 +212,22 @@ def load_model(config: dict | None = None, backend_override: str | None = None):
         raise RuntimeError("Chưa cấu hình model_id")
 
     if backend == "auto":
-        # Inference Providers currently has no providerMapping for these
-        # gated Llama checkpoints, so prefer local GPU when available.
+        # Inference Providers has no providerMapping for these gated Llama
+        # checkpoints, so the only working real path is local GPU inference.
         try:
             import torch
 
             has_gpu = bool(torch.cuda.is_available())
         except Exception:
             has_gpu = False
-        backend = "local" if has_gpu else "endpoint"
+        if not has_gpu:
+            raise RuntimeError(
+                "Không phát hiện CUDA. HF Inference Providers không hỗ trợ checkpoint "
+                "Llama gated này (inferenceProviderMapping: {}), nên không có endpoint dự phòng. "
+                "Hãy bật GPU trong Colab: Runtime → Change runtime type → T4 GPU, "
+                "rồi chạy lại cell 1 → 2 → 3 → 4."
+            )
+        backend = "local"
 
     if backend == "endpoint":
         handle = EndpointModel(
