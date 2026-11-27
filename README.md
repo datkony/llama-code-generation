@@ -9,7 +9,7 @@
 - Khung code đã chạy được pipeline **end-to-end ở chế độ offline** (không cần token/GPU).
 - Máy local hiện tại: Windows 11, Python 3.13.5, `torch==2.10.0+cpu`, **CUDA unavailable**, GPU 2 GB. Ổ C: ~26 GB trống nhưng ổ F: (workspace) ~453 GB → **không chạy Llama 3.1 8B tại local do thiếu CUDA/VRAM, không phải do dung lượng**.
 - Checkpoint tham chiếu: `meta-llama/Llama-3.1-8B-Instruct` @ `0e9e39f249a16976918f6564b8830bc894c89659` (gated, cần chấp nhận license trên Hugging Face).
-- Chiến lược: thử runtime ngoài localhost (Colab/Kaggle/HF endpoint). Nếu đáp ứng → giữ 8B; nếu không → fallback `Llama-3.2-3B/1B-Instruct` và ghi rõ lý do.
+- Chiến lược: dùng GPU ngoài (Colab/Kaggle) chạy **local 4-bit**. HF Inference Providers hiện **không có provider mapping** cho các checkpoint Llama gated này (`inferenceProviderMapping: {}`) nên endpoint không dùng được. Nếu không có GPU → fallback `Llama-3.2-3B/1B-Instruct` và ghi rõ lý do.
 
 ## 2. Cài đặt
 

@@ -143,6 +143,15 @@ class LocalTransformersModel:
         dtype_name = model_cfg.get("dtype", "bfloat16")
         dtype = getattr(torch, dtype_name, torch.float32)
         use_cuda = torch.cuda.is_available()
+        # T4 (compute capability 7.5) has no native bfloat16. Fall back to fp16
+        # so Colab's most common GPU does not fail or run in a bad dtype.
+        if (
+            dtype_name == "bfloat16"
+            and use_cuda
+            and torch.cuda.get_device_capability(0)[0] < 8
+        ):
+            dtype = torch.float16
+        self.dtype = str(dtype).replace("torch.", "")
         load_kwargs: dict = {"torch_dtype": dtype}
         if model_cfg.get("load_in_4bit", False) and use_cuda:
             try:
@@ -187,6 +196,7 @@ class LocalTransformersModel:
             "backend": self.backend,
             "model_id": self.model_id,
             "device": str(self.model.device),
+            "dtype": getattr(self, "dtype", None),
             "n_new_tokens": int(new_tokens.shape[-1]),
         }
         return GenerationOutput(text=text, info=info)
@@ -202,7 +212,15 @@ def load_model(config: dict | None = None, backend_override: str | None = None):
         raise RuntimeError("Chưa cấu hình model_id")
 
     if backend == "auto":
-        backend = "endpoint" if resolve_token() else "local"
+        # Inference Providers currently has no providerMapping for these
+        # gated Llama checkpoints, so prefer local GPU when available.
+        try:
+            import torch
+
+            has_gpu = bool(torch.cuda.is_available())
+        except Exception:
+            has_gpu = False
+        backend = "local" if has_gpu else "endpoint"
 
     if backend == "endpoint":
         handle = EndpointModel(
