@@ -6,7 +6,7 @@
 |---|---|
 | Model | `meta-llama/Llama-3.1-8B-Instruct` @ `0e9e39f249a16976918f6564b8830bc894c89659` |
 | Fallback | `meta-llama/Llama-3.2-3B-Instruct` (chỉ khi không có endpoint/GPU; ghi lý do) |
-| Backend | `endpoint` hoặc `local-4bit` — ghi rõ từng lượt |
+| Backend | `endpoint` (HF Inference Providers, provider mặc định `groq`) hoặc `local-4bit` — ghi rõ từng lượt |
 | Decoding | greedy (`do_sample=false`, `temperature=0`, `top_p=1`, `max_new_tokens=256`) |
 | Dataset | 35 bài `split=report` trong `data/tasks.jsonl` (5 bài `split=tune` chỉ dùng thử prompt, không tính số liệu) |
 | Prompt | A = trực tiếp, B = có cấu trúc; cùng model/decoding/task |

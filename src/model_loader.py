@@ -76,12 +76,14 @@ class EndpointModel:
             ) from exc
 
         self.model_id = model_id
-        self.provider = provider or os.environ.get("INFERENCE_PROVIDER") or None
+        # `provider=None` makes huggingface_hub auto-pick a provider. For this
+        # checkpoint auto-picking can raise StopIteration (empty provider map),
+        # so default to an explicitly live provider and allow an override.
+        self.provider = provider or os.environ.get("INFERENCE_PROVIDER") or "groq"
         self.token = token or resolve_token()
         if not self.token:
             raise RuntimeError(
-                "Không tìm thấy HF_TOKEN. Đặt biến môi trường HF_TOKEN hoặc Colab Secret "
-                "trước khi dùng backend endpoint."
+                "Không tìm thấy HF_TOKEN. Đặt biến môi trường HF_TOKEN trước khi dùng backend endpoint."
             )
 
         try:
@@ -98,11 +100,17 @@ class EndpointModel:
             "temperature": decoding.temperature,
             "top_p": decoding.top_p,
         }
-        response = self.client.chat.completions.create(
-            model=self.model_id, messages=messages, **kwargs
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_id, messages=messages, **kwargs
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                f"Endpoint thất bại với provider='{self.provider}': {exc}. "
+                "Thử INFERENCE_PROVIDER=deepinfra hoặc kiểm tra credit/license HF."
+            ) from exc
         text = response.choices[0].message.content or ""
-        info = {"backend": self.backend, "model_id": self.model_id, "provider": self.provider or "auto"}
+        info = {"backend": self.backend, "model_id": self.model_id, "provider": self.provider}
         usage = getattr(response, "usage", None)
         if usage is not None:
             info["usage"] = {
