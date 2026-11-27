@@ -72,9 +72,7 @@ def main() -> int:
     backend = "local-small"
 
     if token_present:
-        keep_8b = True
-        backend = "endpoint"
-        reasons.append("Có HF token: dùng Inference Providers, giữ được Llama 3.1 8B.")
+        reasons.append("Có HF token: dùng để tải checkpoint gated; không dùng Inference Providers.")
     if torch_info["cuda_available"] and torch_info["vram_mib"] >= 8000:
         keep_8b = True
         if backend == "local-small":
@@ -101,8 +99,8 @@ def main() -> int:
         "keep_8b": keep_8b,
         "reasons": reasons,
         "next_action": (
-            "Chạy: python scripts/smoke_test.py --backend endpoint"
-            if backend == "endpoint"
+            "Bật GPU rồi chạy: python scripts/smoke_test.py --backend local"
+            if backend == "local-4bit"
             else "Chạy: python scripts/smoke_test.py --offline để kiểm tra pipeline trước"
         ),
     }

@@ -6,10 +6,10 @@
 
 ## 1. Trạng thái nhanh
 
-- Khung code đã chạy được pipeline **end-to-end ở chế độ offline** (không cần token/GPU).
+- Pipeline đã chạy **thật trên GPU Colab (T4)** với `meta-llama/Llama-3.1-8B-Instruct`, backend `local` 4-bit. `run_id = 20261127T192206Z`, 70 bản ghi (35 bài × 2 prompt). Xem `results/README.md`.
 - Máy local hiện tại: Windows 11, Python 3.13.5, `torch==2.10.0+cpu`, **CUDA unavailable**, GPU 2 GB. Ổ C: ~26 GB trống nhưng ổ F: (workspace) ~453 GB → **không chạy Llama 3.1 8B tại local do thiếu CUDA/VRAM, không phải do dung lượng**.
-- Checkpoint tham chiếu: `meta-llama/Llama-3.1-8B-Instruct` @ `0e9e39f249a16976918f6564b8830bc894c89659` (gated, cần chấp nhận license trên Hugging Face).
-- Chiến lược: dùng GPU ngoài (Colab/Kaggle) chạy **local 4-bit**. HF Inference Providers hiện **không có provider mapping** cho các checkpoint Llama gated này (`inferenceProviderMapping: {}`) nên endpoint không dùng được. Nếu không có GPU → fallback `Llama-3.2-3B/1B-Instruct` và ghi rõ lý do.
+- Checkpoint đã chốt: `meta-llama/Llama-3.1-8B-Instruct` @ `0e9e39f249a16976918f6564b8830bc894c89659` (gated, cần chấp nhận license trên Hugging Face).
+- HF Inference Providers **không có provider mapping** cho checkpoint này (`inferenceProviderMapping: {}`) → endpoint không dùng được. Runtime ngoài localhost đáp ứng (CUDA=true, VRAM đủ) nên **giữ 8B**, không fallback. Chế độ `--offline` chỉ validate pipeline, không báo cáo số liệu.
 
 ## 2. Cài đặt
 
@@ -18,7 +18,7 @@ python -m venv .venv
 # Windows PowerShell:
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-Copy-Item .env.example .env      # rồi điền HF_TOKEN nếu dùng endpoint
+Copy-Item .env.example .env      # rồi điền HF_TOKEN để tải checkpoint gated
 ```
 
 Không bao giờ commit `.env` hay token.
@@ -34,9 +34,10 @@ Lệnh in JSON gồm: đang ở Colab/Kaggle hay local, CUDA/VRAM, token có pre
 ### Nếu dùng Colab từ VS Code (extension `google.colab` đã cài)
 
 1. Mở `scripts/runtime_probe.ipynb` trong VS Code.
-2. `Select Kernel` → `Colab` → `Auto Connect` → đăng nhập Google.
-3. Chạy cell 1 để cài dependencies (cell đã gỡ `diffusers` có sẵn trên Colab để tránh xung đột `huggingface-hub`), cell 2 clone repo, cell 3 probe GPU. **Vì sao clone?** Cell của kernel Colab chạy trên máy ảo của Google, không phải máy bạn; clone chỉ để copy mã nguồn vào máy ảo đó, không tạo repo mới.
-4. Chạy cell 4: một ô nhập hiện ngay dưới cell — dán **HF token** vào đó rồi Enter. Token chỉ nằm trong biến môi trường kernel, không ghi vào notebook. Extension Colab trên VS Code **không đọc được `google.colab.userdata`**, nên không dùng Secrets. Kết quả nằm trong bản sao Colab → tải `results/summary/*.json` về hoặc commit/push từ Colab.
+2. `Select Kernel` → `Colab` → `Auto Connect` → đăng nhập Google, rồi bật **Runtime → Change runtime type → T4 GPU**.
+3. Chạy lần lượt cell 1–8: cài dependency → clone/pull repo → probe CUDA → nhập HF token → smoke → benchmark A/B → unit test → đóng gói `results_export_<run_id>.zip`.
+4. **Vì sao clone?** Kernel Colab chạy trên máy ảo của Google, không phải máy bạn; clone chỉ copy mã nguồn vào máy ảo đó.
+5. HF token được nhập ở cell 4 và chỉ nằm trong biến môi trường của kernel. Extension Colab trên VS Code **không đọc được `google.colab.userdata`**, nên không dùng Secrets. Cell 8 tạo zip kết quả để bạn tải về; trước khi commit cần xóa output notebook.
 
 ## 4. Chạy pipeline
 
@@ -45,12 +46,9 @@ Lệnh in JSON gồm: đang ở Colab/Kaggle hay local, CUDA/VRAM, token có pre
 python scripts/smoke_test.py --offline
 python scripts/run_benchmark.py --offline --variants A,B
 
-# Chạy thật với endpoint (cần HF_TOKEN)
-python scripts/smoke_test.py --backend endpoint
-python scripts/run_benchmark.py --variants A,B
-
-# Chạy thật trên Colab/Kaggle có GPU
+# Chạy thật trên Colab/Kaggle có GPU (đường được dùng cho số liệu báo cáo)
 python scripts/smoke_test.py --backend local
+python scripts/run_benchmark.py --backend local --variants A,B
 
 # Giao diện demo
 python app/demo.py
@@ -72,7 +70,7 @@ app/            demo.py (Gradio + CLI)
 scripts/        check_runtime.py, smoke_test.py, run_benchmark.py, runtime_probe.ipynb
 tests/          unittest (chạy được cả bằng pytest)
 docs/           architecture.md, experiment_protocol.md, report_draft.md
-results/        raw/, summary/
+results/        raw/, summary/, README.md (nguồn gốc số liệu)
 document/       tài liệu nội bộ — KHÔNG push GitHub
 ```
 

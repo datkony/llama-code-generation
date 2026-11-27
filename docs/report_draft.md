@@ -1,10 +1,10 @@
 # Bản thảo báo cáo công khai — Llama cho sinh mã Python
 
-> **Cách dùng:** file này là bản thảo để nhóm điền số liệu thật từ `results/summary/`. Các ô `TODO` phải được thay trước khi nộp. **Không** chép số benchmark của Llama 3/Code Llama/Llama 4 làm kết quả đo của nhóm.
+> **Cách dùng:** số liệu trong file này được điền từ `results/summary/benchmark_20261127T192206Z.json`. Trước khi nộp cần đối chiếu với file raw từ Colab và bổ sung phân tích định tính. **Không** chép số benchmark của Llama 3/Code Llama/Llama 4 làm kết quả đo của nhóm.
 
-## Tóm tắt (TODO: viết sau khi có số liệu)
+## Tóm tắt
 
-Đồ án khảo sát khả năng sinh mã Python của mô hình Llama và ảnh hưởng của chiến lược prompt. Pipeline gồm: tạo prompt (A/B) → gọi mô hình → trích xuất code block → kiểm tra cú pháp → chạy unit test trong sandbox → ghi log thô và tính pass@1, syntax validity, latency. (TODO: 2–3 câu kết luận với số liệu thật.)
+Đồ án khảo sát khả năng sinh mã Python của `meta-llama/Llama-3.1-8B-Instruct` và ảnh hưởng của chiến lược prompt. Pipeline gồm: tạo prompt (A/B) → suy luận local 4-bit trên GPU → trích xuất code block → kiểm tra cú pháp → chạy unit test trong sandbox → ghi log và tính pass@1, syntax validity, latency. Trên 35 bài `report`, cả hai prompt đạt **pass@1 = 0.914** và **syntax validity = 1.000**; prompt A nhanh hơn đáng kể (1.649 s so với 5.185 s trung bình). Giả thuyết “prompt có cấu trúc improves pass@1” **không được ủng hộ** trong lần đo này.
 
 ## 1. Đặt vấn đề
 
@@ -25,7 +25,7 @@ Mô hình ngôn ngữ lớn có thể sinh mã từ mô tả tự nhiên, nhưng
 ```mermaid
 flowchart LR
     T[Đề bài Python] --> P[Prompt A / B]
-    P --> M[Model: endpoint hoặc local 4-bit]
+    P --> M[Model: local 4-bit trên GPU CUDA]
     M --> G[Generator: đo latency]
     G --> E[Trích code + ast.parse]
     E --> S[Sandbox: subprocess, timeout, env sạch]
@@ -39,38 +39,40 @@ Chi tiết module xem `docs/architecture.md`. Mã sinh ra **không** chạy tron
 
 | Thành phần | Cấu hình |
 |---|---|
-| Model | `meta-llama/Llama-3.1-8B-Instruct` @ `0e9e39f249a16976918f6564b8830bc894c89659` (TODO: ghi revision thực tế nếu fallback) |
-| Backend | Endpoint (HF Inference Providers) hoặc local 4-bit trên GPU ≥8 GB (TODO: chọn một) |
+| Model | `meta-llama/Llama-3.1-8B-Instruct` @ `0e9e39f249a16976918f6564b8830bc894c89659` (revision từ checkpoint tải về) |
+| Backend | `local`, 4-bit trên GPU Colab T4. Không dùng endpoint vì `inferenceProviderMapping` trống cho checkpoint này. |
 | Decoding | Greedy: `temperature=0`, `top_p=1`, `max_new_tokens=256` |
 | Dữ liệu | 40 bài tự biên soạn: 5 `tune` + 35 `report` |
 | Prompt | A = trực tiếp; B = có vai trò, chữ ký, ràng buộc, biên, định dạng. Cùng model/decoding/task giữa hai lượt. |
 | Metric | `pass@1`, `syntax_validity`, `latency_mean/median`, `error_counts` |
 | Kiểm soát | Không sửa tay output; không dùng bài `tune` để tính số liệu; không đọc test ẩn khi viết prompt |
 
-Lệnh chạy: `python scripts/check_runtime.py`, `python scripts/smoke_test.py --backend endpoint`, `python scripts/run_benchmark.py --variants A,B`. Offline mode (`--offline`) chỉ dùng `reference_code` để validate pipeline, **không** được báo cáo.
+Lệnh chạy: `python scripts/check_runtime.py`, `python scripts/smoke_test.py --backend local`, `python scripts/run_benchmark.py --backend local --variants A,B`; trên Colab chạy `scripts/runtime_probe.ipynb` cell 1–8. Offline mode (`--offline`) chỉ dùng `reference_code` để validate pipeline, **không** được báo cáo.
 
-## 5. Kết quả (TODO: điền từ `results/summary/`)
+## 5. Kết quả
+
+Nguồn: `results/summary/benchmark_20261127T192206Z.json` — `run_id = 20261127T192206Z`, `offline = false`, 35 bài × 2 prompt = 70 bản ghi.
 
 | Prompt | pass@1 | syntax validity | latency mean (s) | latency median (s) |
 |---|---:|---:|---:|---:|
-| A | TODO | TODO | TODO | TODO |
-| B | TODO | TODO | TODO | TODO |
+| A | 0.914 | 1.000 | 1.649 | 1.341 |
+| B | 0.914 | 1.000 | 5.185 | 4.770 |
 
-Phân loại lỗi (TODO): `syntax=...`, `assertion=...`, `timeout=...`, `generation_error=...`, ...
+Phân loại lỗi: A gồm `none=32`, `assertion=1`, `runtime=2`; B gồm `none=32`, `runtime=2`, `name=1`. Không có lỗi cú pháp, timeout hay generation_error trong lần chạy này.
 
-Nhận xét (TODO): H1 được ủng hộ hay không? Nếu không, giải thích vì sao (prompt dài hơn, latency cao hơn, mẫu nhỏ...).
+Nhận xét: H1 **không được ủng hộ** vì pass@1 bằng nhau (32/35). Prompt B làm tăng trung bình độ trễ khoảng 3.1 lần và thay đổi dạng lỗi (một lỗi `name` thay cho một lỗi `assertion`). Với 35 bài, hiệu ứng nhỏ không thể kết luận; cần nhiều sample hoặc tập lớn hơn trước khi khẳng định prompt B tốt hơn.
 
 ## 6. Thảo luận và giới hạn
 
 - Tập 35 bài báo cáo là nhỏ; kết luận chỉ có giá trị trong phạm vi đồ án.
 - Bài tự biên soạn có nguy cơ trùng với dữ liệu huấn luyện; không ngoại suy ra toàn bộ họ Llama.
 - Prompt tiếng Anh trong khi đề gốc có thể tiếng Việt; cần ghi rõ nếu dịch.
-- Provider/quantization khác nhau có thể đổi kết quả; mọi tham số được log trong từng dòng JSONL.
+- Quantization 4-bit và backend local khác với inference FP16/provider khác có thể đổi kết quả; mọi tham số được log trong từng dòng JSONL. File raw của `run_id` này cần được copy từ Colab về `results/raw/` trước khi chốt báo cáo cuối.
 - Sandbox làm latency đo được cao hơn inference thuần.
 
 ## 7. Kết luận
 
-TODO: 3–5 câu, nêu rõ model/revision, prompt hiệu quả hơn và giới hạn. Không dùng số paper làm số liệu nhóm.
+Đồ án đã chạy được pipeline thật với `meta-llama/Llama-3.1-8B-Instruct` @ `0e9e39f…` trên GPU Colab, backend local 4-bit, 35 bài đánh giá. Cả Prompt A và B đạt pass@1 = 0.914, syntax validity = 1.000; Prompt A có độ trễ thấp hơn rõ rệt. Trong giới hạn tập mẫu nhỏ và một lần lấy mẫu, không có bằng chứng Prompt B vượt Prompt A. Các bước tiếp theo là export log thô từ Colab, tăng số sample và đối chiếu lỗi định tính trước khi khóa báo cáo. Không dùng số liệu từ paper làm kết quả của nhóm.
 
 ## Tài liệu tham khảo (rút gọn)
 

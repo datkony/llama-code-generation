@@ -1,0 +1,54 @@
+{
+  "run_id": "20261127T192206Z",
+  "model": {
+    "backend": "local",
+    "model_id": "meta-llama/Llama-3.1-8B-Instruct",
+    "revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+    "provider": null
+  },
+  "model_revision": "0e9e39f249a16976918f6564b8830bc894c89659",
+  "decoding_config": {
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "max_new_tokens": 256,
+    "do_sample": false,
+    "seed": 42
+  },
+  "dataset": {
+    "path": "data/tasks.jsonl",
+    "split": "report",
+    "n_tasks": 35
+  },
+  "prompt_variants": [
+    "A",
+    "B"
+  ],
+  "offline": false,
+  "variants": {
+    "A": {
+      "n_tasks": 35,
+      "pass_at_1": 0.9142857142857143,
+      "syntax_validity": 1.0,
+      "latency_mean_s": 1.649,
+      "latency_median_s": 1.341,
+      "error_counts": {
+        "none": 32,
+        "assertion": 1,
+        "runtime": 2
+      }
+    },
+    "B": {
+      "n_tasks": 35,
+      "pass_at_1": 0.9142857142857143,
+      "syntax_validity": 1.0,
+      "latency_mean_s": 5.185,
+      "latency_median_s": 4.77,
+      "error_counts": {
+        "none": 32,
+        "runtime": 2,
+        "name": 1
+      }
+    }
+  },
+  "n_records": 70
+}
