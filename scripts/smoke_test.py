@@ -22,7 +22,7 @@ from src.prompt_builder import build_messages  # noqa: E402
 
 
 def load_tasks(path: str | Path) -> list[dict]:
-    with Path(path).open("r", encoding="utf-8") as fh:
+    with Path(path).open("r", encoding="utf-8-sig") as fh:
         return [json.loads(line) for line in fh if line.strip()]
 
 

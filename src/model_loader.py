@@ -38,17 +38,17 @@ class GenerationOutput:
 
 
 def resolve_token() -> str | None:
-    """Read a token from env or Colab secrets without printing its value."""
+    """Read a token from environment variables without printing its value.
+
+    `google.colab.userdata` is intentionally NOT used: it times out when the
+    notebook runs through the VS Code Colab extension. The notebook sets
+    ``HF_TOKEN`` in the kernel environment instead.
+    """
     for name in TOKEN_ENV_NAMES:
         value = os.environ.get(name)
         if value:
             return value
-    try:
-        from google.colab import userdata  # type: ignore
-
-        return userdata.get("HF_TOKEN") or None
-    except Exception:
-        return None
+    return None
 
 
 def decoding_from_config(config: dict) -> DecodingConfig:

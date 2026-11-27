@@ -27,15 +27,6 @@ def module_version(name: str) -> str | None:
         return None
 
 
-def colab_secret_present() -> bool:
-    try:
-        from google.colab import userdata  # type: ignore
-
-        return bool(userdata.get("HF_TOKEN"))
-    except Exception:
-        return False
-
-
 def main() -> int:
     # Windows console mặc định cp1252 không in được tiếng Việt.
     for stream in (sys.stdout, sys.stderr):
@@ -66,7 +57,9 @@ def main() -> int:
     except Exception:
         pass
 
-    token_present = any(os.environ.get(name) for name in TOKEN_NAMES) or colab_secret_present()
+    # Không gọi google.colab.userdata: API này treo khi chạy qua VS Code Colab extension.
+    # Token chỉ được đọc từ biến môi trường do notebook thiết lập.
+    token_present = any(os.environ.get(name) for name in TOKEN_NAMES)
     free_gb = round(shutil.disk_usage(ROOT).free / (1024**3), 2)
 
     packages = {

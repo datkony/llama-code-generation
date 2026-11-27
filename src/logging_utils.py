@@ -33,7 +33,7 @@ RECORD_FIELDS = [
 def load_config(path: str | Path | None = None) -> dict:
     """Load the JSON-formatted YAML config without requiring PyYAML."""
     cfg_path = Path(path) if path else DEFAULT_CONFIG
-    with cfg_path.open("r", encoding="utf-8") as fh:
+    with cfg_path.open("r", encoding="utf-8-sig") as fh:
         return json.load(fh)
 
 
