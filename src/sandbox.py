@@ -20,8 +20,56 @@ from pathlib import Path
 _SENTINEL = "__ALL_TESTS_PASSED__"
 
 _RUNNER = """\
+import os
 import sys
+import sysconfig
 import traceback
+
+# Best-effort guards only: they reduce accidental damage from generated code
+# but are not a security boundary. See docs/sandbox.md for the limitations.
+_BLOCKED_IMPORTS = frozenset({
+    "aiohttp", "ctypes", "ftplib", "http", "httpx", "multiprocessing",
+    "requests", "smtplib", "socket", "ssl", "subprocess", "telnetlib",
+    "urllib", "webbrowser", "xmlrpc",
+})
+
+class _ImportGuard:
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname.split(".", 1)[0] in _BLOCKED_IMPORTS:
+            raise ImportError("blocked import: " + fullname)
+        return None
+
+sys.meta_path.insert(0, _ImportGuard())
+
+_PATHS = sysconfig.get_paths()
+_ROOTS = [os.path.realpath(p) for p in {
+    os.getcwd(), sys.base_prefix, sys.prefix,
+    _PATHS.get("stdlib", ""), _PATHS.get("purelib", ""), _PATHS.get("platlib", ""),
+} if p]
+
+def _allowed_path(path):
+    if not isinstance(path, (str, bytes)):
+        return True
+    if isinstance(path, bytes):
+        path = os.fsdecode(path)
+    if not path:
+        return True
+    real = os.path.realpath(path)
+    return any(real == root or real.startswith(root + os.sep) for root in _ROOTS)
+
+_BLOCKED_EVENTS = frozenset({
+    "subprocess.Popen", "os.system", "os.fork", "os.exec", "os.spawn",
+    "os.posix_spawn", "socket.__new__", "socket.connect", "socket.bind",
+    "ctypes.dlopen", "ctypes.dlsym",
+})
+
+def _audit(event, args):
+    if event in _BLOCKED_EVENTS:
+        raise PermissionError("blocked operation: " + event)
+    if event == "open" and args and not _allowed_path(args[0]):
+        raise PermissionError("blocked file access")
+
+sys.addaudithook(_audit)
 
 sys.path.insert(0, ".")
 from solution import *  # noqa: F401,F403

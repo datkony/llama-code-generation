@@ -2,7 +2,7 @@
 
 Đồ án: **Mô hình Llama trong bài toán sinh mã nguồn** — sinh hàm Python từ mô tả tự nhiên, trích xuất mã, kiểm tra cú pháp và chạy unit test trong sandbox.
 
-> Mốc nộp báo cáo rút gọn: **01/12/2026**. proposal gốc nằm trong thư mục `document/` (nội bộ, đã bị `.gitignore` chặn không push lên GitHub).
+> Mốc nộp cuối cùng: **30/11/2026** (điều chỉnh từ 13/12). proposal gốc nằm trong thư mục `document/` (nội bộ, đã bị `.gitignore` chặn không push lên GitHub).
 
 ## 1. Trạng thái nhanh
 
@@ -69,7 +69,9 @@ src/            model_loader, prompt_builder, generator, code_extractor,
 app/            demo.py (Gradio + CLI)
 scripts/        check_runtime.py, smoke_test.py, run_benchmark.py, runtime_probe.ipynb
 tests/          unittest (chạy được cả bằng pytest)
-docs/           architecture.md, experiment_protocol.md, report_draft.md
+docs/           architecture.md, experiment_protocol.md, report_draft.md,
+                model_architecture.md, generation_pipeline.md, model_comparison.md,
+                dataset.md, metrics.md, baseline.md, sandbox.md
 results/        raw/, summary/, README.md (nguồn gốc số liệu)
 document/       tài liệu nội bộ — KHÔNG push GitHub
 ```
@@ -78,10 +80,20 @@ document/       tài liệu nội bộ — KHÔNG push GitHub
 
 - Mã do model sinh ra **không** chạy trong tiến trình chính; luôn qua `src/sandbox.py`.
 - Tiến trình con dùng env đã lọc, thư mục tạm, timeout; trên POSIX có thêm RLIMIT CPU/RAM/process.
-- Windows không giới hạn RAM được bằng stdlib và network chưa bị chặn hoàn toàn → phải nêu giới hạn này trong báo cáo.
+- Runner có import guard/audit hook (best-effort) chặn import mạng/tiến trình, tạo socket và đọc file ngoài miền cho phép; network **vẫn không bị cắt ở tầng OS**.
+- Windows không giới hạn RAM được bằng stdlib → phải nêu giới hạn này trong báo cáo. Xem [docs/sandbox.md](docs/sandbox.md).
+- Guard sandbox được bổ sung sau lượt đo `20261127T192206Z`; nếu chạy lại dùng `run_id` mới, không gộp số liệu.
 
 ## 7. Test
 
 ```bash
 python -m unittest discover -s tests -v
 ```
+
+Lần chạy gần nhất: **16 test, OK**.
+
+## 8. Tài liệu kỹ thuật công khai
+
+- [Kiến trúc Llama 3.1 8B](docs/model_architecture.md) · [Quy trình sinh mã](docs/generation_pipeline.md) · [So sánh Llama/Code Llama/Llama 4](docs/model_comparison.md)
+- [Dataset](docs/dataset.md) · [Metric](docs/metrics.md) · [Baseline](docs/baseline.md) · [Sandbox](docs/sandbox.md)
+- [Giao thức thí nghiệm](docs/experiment_protocol.md) · [Kiến trúc demo](docs/architecture.md) · [Bản nháp báo cáo](docs/report_draft.md)

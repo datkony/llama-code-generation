@@ -60,7 +60,7 @@ Nguồn: `results/summary/benchmark_20261127T192206Z.json` — `run_id = 2026112
 
 Phân loại lỗi: A gồm `none=32`, `assertion=1`, `runtime=2`; B gồm `none=32`, `runtime=2`, `name=1`. Không có lỗi cú pháp, timeout hay generation_error trong lần chạy này.
 
-Nhận xét: H1 **không được ủng hộ** vì pass@1 bằng nhau (32/35). Prompt B làm tăng trung bình độ trễ khoảng 3.1 lần và thay đổi dạng lỗi (một lỗi `name` thay cho một lỗi `assertion`). Với 35 bài, hiệu ứng nhỏ không thể kết luận; cần nhiều sample hoặc tập lớn hơn trước khi khẳng định prompt B tốt hơn.
+Nhận xét: H1 **không được ủng hộ** vì pass@1 bằng nhau (32/35). Trường hợp Prompt B có **độ trễ sinh** trung bình cao hơn khoảng 3,1 lần (`latency_s` chỉ đo quanh `model.generate`, không gồm sandbox; nguyên nhân có thể là output dài hơn, cần raw log để kiểm chứng) và thay đổi dạng lỗi (một lỗi `name` thay cho một lỗi `assertion`). Với 35 bài, hiệu ứng nhỏ không thể kết luận; cần nhiều sample hoặc tập lớn hơn trước khi khẳng định prompt B tốt hơn.
 
 ## 6. Thảo luận và giới hạn
 
@@ -68,7 +68,7 @@ Nhận xét: H1 **không được ủng hộ** vì pass@1 bằng nhau (32/35). P
 - Bài tự biên soạn có nguy cơ trùng với dữ liệu huấn luyện; không ngoại suy ra toàn bộ họ Llama.
 - Prompt tiếng Anh trong khi đề gốc có thể tiếng Việt; cần ghi rõ nếu dịch.
 - Quantization 4-bit và backend local khác với inference FP16/provider khác có thể đổi kết quả; mọi tham số được log trong từng dòng JSONL. File raw của `run_id` này cần được copy từ Colab về `results/raw/` trước khi chốt báo cáo cuối.
-- Sandbox làm latency đo được cao hơn inference thuần.
+- `latency_s` được đo riêng quanh `model.generate`; thời gian thực thi kiểm thử nằm ở `exec_seconds`. Vì vậy **không** kết luận sandbox làm tăng latency sinh trong bảng trên. Raw log cần được export để phân tích thêm p50/p95 và độ dài output.
 
 ## 7. Kết luận
 

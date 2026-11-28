@@ -1,16 +1,17 @@
 {
   "project": {
     "name": "llama-code-generation",
-    "report_deadline": "2026-12-01",
+    "report_deadline": "2026-11-30",
     "note": "File .yaml nhưng nội dung là JSON hợp lệ để load bằng stdlib (không bắt buộc PyYAML)."
   },
   "model": {
     "model_id": "meta-llama/Llama-3.1-8B-Instruct",
     "revision": "0e9e39f249a16976918f6564b8830bc894c89659",
     "fallback_model_id": "meta-llama/Llama-3.2-3B-Instruct",
-    "backend": "auto",
-    "provider": "groq",
+    "backend": "local",
+    "provider": null,
     "dtype": "bfloat16",
+    "dtype_note": "Cấu hình khai báo bfloat16; trên T4 (compute capability 7.5) model_loader tự dùng float16 cho compute dtype.",
     "load_in_4bit": true
   },
   "decoding": {

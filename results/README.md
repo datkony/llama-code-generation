@@ -15,4 +15,6 @@ Thư mục này chứa log do pipeline của nhóm tự đo. **Không** chép s�
 - Dữ liệu: 35 bài `split=report`, Prompt A/B, 70 bản ghi
 - File: `summary/benchmark_20261127T192206Z.json`
 
-> File summary được trích từ output của `scripts/runtime_probe.ipynb` (lần chạy thành công). File raw tương ứng nằm trong bản sao Colab tại `/content/llama-code-generation/results/raw/` và cần được copy về repo bằng cell 8 của notebook trước khi chốt báo cáo cuối. Không tạo file raw giả.
+> File summary được trích từ output của `scripts/runtime_probe.ipynb` (lần chạy thành công). File raw tương ứng nằm trong bản sao Colab tại `/content/llama-code-generation/results/raw/` và cần được copy về repo bằng cell 8 của notebook trước khi chốt báo cáo cuối. Không tạo file raw giả. Chưa có p95 vì thiếu file raw; không suy từ summary.
+
+> Cấu hình sandbox của lượt này là bản trước khi bổ sung import guard/audit hook ngày 28/11/2026. Nếu chạy lại, dùng `run_id` mới và giữ summary này nguyên vẹn; không gộp số liệu của hai cấu hình sandbox khác nhau. Xem [docs/sandbox.md](../docs/sandbox.md).
